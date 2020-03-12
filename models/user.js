@@ -1,58 +1,65 @@
-'use strict';
-const Sequelize = require('sequelize');
+"use strict";
+const Sequelize = require("sequelize");
 
-module.exports = (sequelize) => {
+module.exports = sequelize => {
   class User extends Sequelize.Model {}
-  User.init({
-    firstName: {
+  User.init(
+    {
+      firstName: {
         type: Sequelize.STRING,
-        allowNull: false, 
+        allowNull: false,
         validate: {
-            notNull: {
-                msg: 'First Name must not be blank',
-            },
-            notEmpty: {
-                msg: 'First Name must not be blank'         
-            }      
-        },
-    },
-    lastName: {
+          notNull: {
+            msg: "First Name must not be blank"
+          },
+          notEmpty: {
+            msg: "First Name must not be blank"
+          }
+        }
+      },
+      lastName: {
         type: Sequelize.STRING,
-        allowNull: false, 
+        allowNull: false,
         validate: {
-            notNull: {
-                msg: 'Last Name must not be blank',
-            },
-            notEmpty: {
-                msg: 'Last Name must not be blank'         
-            }      
-        },
-    },
-    emailAddress: {
+          notNull: {
+            msg: "Last Name must not be blank"
+          },
+          notEmpty: {
+            msg: "Last Name must not be blank"
+          }
+        }
+      },
+      emailAddress: {
         type: Sequelize.STRING,
-        allowNull: false, 
+        allowNull: false,
         validate: {
-            notNull: {
-                msg: 'Email Address must not be blank',
-            },
-            notEmpty: {
-                msg: 'Email Address must not be blank'         
-            }      
-        },
-    },
-    password: {
+          notNull: {
+            msg: "Email Address must not be blank"
+          },
+          notEmpty: {
+            msg: "Email Address must not be blank"
+          }
+        }
+      },
+      password: {
         type: Sequelize.STRING,
-        allowNull: false, 
+        allowNull: false,
         validate: {
-            notNull: {
-                msg: 'password must not be blank',
-            },
-            notEmpty: {
-                msg: 'password must not be blank'         
-            }      
-        },
+          notNull: {
+            msg: "password must not be blank"
+          },
+          notEmpty: {
+            msg: "password must not be blank"
+          }
+        }
+      }
     },
-  }, { sequelize });
+    { sequelize }
+  );
+
+  User.associate = models => {
+    User.hasMany(models.Course);
+  };
 
   return User;
 };
