@@ -1,19 +1,21 @@
-"use strict";
+//users model
 const Sequelize = require("sequelize");
 
 module.exports = sequelize => {
   class User extends Sequelize.Model {}
   User.init(
     {
+      id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+      },
       firstName: {
         type: Sequelize.STRING,
         allowNull: false,
         validate: {
-          notNull: {
-            msg: "First Name must not be blank"
-          },
           notEmpty: {
-            msg: "First Name must not be blank"
+            msg: "First Name must not be left blank."
           }
         }
       },
@@ -21,11 +23,8 @@ module.exports = sequelize => {
         type: Sequelize.STRING,
         allowNull: false,
         validate: {
-          notNull: {
-            msg: "Last Name must not be blank"
-          },
           notEmpty: {
-            msg: "Last Name must not be blank"
+            msg: "Last name must not be left blank."
           }
         }
       },
@@ -33,23 +32,24 @@ module.exports = sequelize => {
         type: Sequelize.STRING,
         allowNull: false,
         validate: {
-          notNull: {
-            msg: "Email Address must not be blank"
-          },
           notEmpty: {
-            msg: "Email Address must not be blank"
+            msg: "Email address must not be left blank."
+          },
+          isEmail: {
+            msg: "Email address is invalid. Please try again."
           }
+        },
+        unique: {
+          args: true,
+          msg: "Email address already exists."
         }
       },
       password: {
         type: Sequelize.STRING,
         allowNull: false,
         validate: {
-          notNull: {
-            msg: "password must not be blank"
-          },
           notEmpty: {
-            msg: "password must not be blank"
+            msg: "Password must not be left blank."
           }
         }
       }
@@ -58,8 +58,14 @@ module.exports = sequelize => {
   );
 
   User.associate = models => {
-    User.hasMany(models.Course);
+    User.hasMany(models.Course, {
+      as: "userInfo",
+      foreignKey: {
+        fieldName: "userId",
+        allowNull: false
+      }
+    });
   };
-
+  ``;
   return User;
 };
