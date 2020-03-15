@@ -88,7 +88,6 @@ router.post(
       .exists({ checkNull: true, checkFalsy: true })
       .withMessage('Please provide a value for "password"')
   ],
-  authenticateUser,
   (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -100,15 +99,16 @@ router.post(
       emailAddress: req.body.emailAddress,
       password: bcryptjs.hashSync(req.body.password)
     });
-    // Set the status to 201 Created and end the response.
-    res.status(201).end();
+    res
+      .status(201)
+      .location("/")
+      .end();
   }
 );
 
 // Get Courses Route
 router.get(
   "/courses",
-  authenticateUser,
   asyncHandler(async (req, res) => {
     const courses = await Course.findAll({
       attributes: {
@@ -124,12 +124,33 @@ router.get(
         }
       ]
     });
-    res.json(courses);
+    res.status(200).json(courses);
+  })
+);
+//Get a course by ID
+router.get(
+  "/courses/:id",
+  asyncHandler(async (req, res) => {
+    const course = await Course.findByPk(req.params.id, {
+      attributes: {
+        exclude: ["createdAt", "updatedAt"]
+      },
+      include: [
+        {
+          model: User,
+          as: "userInfo",
+          attributes: {
+            exclude: ["password", "createdAt", "updatedAt"]
+          }
+        }
+      ]
+    });
+    res.status(200).json(course);
   })
 );
 
 // Post a new course route
-//Required fields Course:  title, description
+
 router.post(
   "/courses",
   [
@@ -149,12 +170,12 @@ router.post(
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
     }
-    Course.create({
-      title: req.body.title,
-      description: req.body.description
-    });
-    // Set the status to 201 Created and end the response.
-    res.status(201).end();
+
+    const course = Course.create(req.body);
+    res
+      .status(201)
+      .location("/courses/" + course.id)
+      .end();
   }
 );
 
