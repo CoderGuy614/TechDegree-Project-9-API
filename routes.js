@@ -50,19 +50,28 @@ const authenticateUser = async (req, res, next) => {
   }
 };
 
-// Get Users Route
+// Get Users - Returns the authorized user
 router.get(
   "/users",
   authenticateUser,
   asyncHandler(async (req, res) => {
-    const users = await User.findAll();
-    console.log("req");
-    res.json(users);
+    const authUser = req.currentUser;
+
+    const user = await User.findByPk(authUser.id, {
+      attributes: {
+        exclude: ["password", "createdAt", "updatedAt"]
+      }
+    });
+
+    if (user) {
+      res.status(200).json(user);
+    } else {
+      res.status(400).json({ message: "User not found" });
+    }
   })
 );
 
 // Post a new user route
-//Required fields Course:  title, description
 router.post(
   "/users",
   [
