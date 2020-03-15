@@ -197,11 +197,8 @@ router.put(
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
     }
-
     const course = await Course.findByPk(req.params.id);
-    console.log("THE COURSE IS", course);
     const authUser = req.currentUser;
-    console.log("THE AUTH USER ID IS ", authUser.id);
     if (authUser.id === course.userId) {
       course.update(req.body);
       res.status(204).end();
@@ -209,6 +206,23 @@ router.put(
       res
         .status(403)
         .json({ message: "You are not authorized to update this course" });
+    }
+  })
+);
+
+router.delete(
+  "/courses/:id",
+  authenticateUser,
+  asyncHandler(async (req, res) => {
+    const course = await Course.findByPk(req.params.id);
+    const authUser = req.currentUser;
+    if (authUser.id === course.userId) {
+      course.destroy(req.body);
+      res.status(204).end();
+    } else {
+      res
+        .status(403)
+        .json({ message: "You are not authorized to delete this course" });
     }
   })
 );
