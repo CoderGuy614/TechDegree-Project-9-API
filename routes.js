@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const bcryptjs = require("bcryptjs");
 const { check, validationResult } = require("express-validator");
 const nameValidator = check("name");
 const User = require("./models").models.User;
@@ -51,7 +52,7 @@ router.post(
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       emailAddress: req.body.emailAddress,
-      password: req.body.password
+      password: bcryptjs.hashSync(req.body.password)
     });
     // Set the status to 201 Created and end the response.
     res.status(201).end();
@@ -76,9 +77,37 @@ router.get(
         }
       ]
     });
-    console.log(courses);
     res.json(courses);
   })
+);
+
+// Post a new course route
+//Required fields Course:  title, description
+router.post(
+  "/courses",
+  [
+    check("title")
+      .exists({ checkNull: true, checkFalsy: true })
+      .withMessage('Please provide a value for "title"'),
+    check("description")
+      .exists({ checkNull: true, checkFalsy: true })
+      .withMessage('Please provide a value for "description"'),
+    check("userId")
+      .exists({ checkNull: true, checkFalsy: true })
+      .withMessage('Please provide a value for "userId"')
+  ],
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+    Course.create({
+      title: req.body.title,
+      description: req.body.description
+    });
+    // Set the status to 201 Created and end the response.
+    res.status(201).end();
+  }
 );
 
 module.exports = router;
