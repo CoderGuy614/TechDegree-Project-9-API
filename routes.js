@@ -106,7 +106,7 @@ router.post(
   }
 );
 
-// Get Courses Route
+// Get All Courses Route
 router.get(
   "/courses",
   asyncHandler(async (req, res) => {
@@ -149,8 +149,7 @@ router.get(
   })
 );
 
-// Post a new course route
-
+// Post a new course route (Protected)
 router.post(
   "/courses",
   [
@@ -177,6 +176,41 @@ router.post(
       .location("/courses/" + course.id)
       .end();
   }
+);
+// Update a course (Protected)
+router.put(
+  "/courses/:id",
+  [
+    check("title")
+      .exists({ checkNull: true, checkFalsy: true })
+      .withMessage('Please provide a value for "title"'),
+    check("description")
+      .exists({ checkNull: true, checkFalsy: true })
+      .withMessage('Please provide a value for "description"'),
+    check("userId")
+      .exists({ checkNull: true, checkFalsy: true })
+      .withMessage('Please provide a value for "userId"')
+  ],
+  authenticateUser,
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const course = await Course.findByPk(req.params.id);
+    console.log("THE COURSE IS", course);
+    const authUser = req.currentUser;
+    console.log("THE AUTH USER ID IS ", authUser.id);
+    if (authUser.id === course.userId) {
+      course.update(req.body);
+      res.status(204).end();
+    } else {
+      res
+        .status(403)
+        .json({ message: "You are not authorized to update this course" });
+    }
+  })
 );
 
 module.exports = router;
