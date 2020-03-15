@@ -3,6 +3,7 @@ const router = express.Router();
 const bcryptjs = require("bcryptjs");
 const { check, validationResult } = require("express-validator");
 const nameValidator = check("name");
+const auth = require("basic-auth");
 const User = require("./models").models.User;
 const Course = require("./models").models.Course;
 
@@ -15,9 +16,44 @@ function asyncHandler(cb) {
     }
   };
 }
+
+const authenticateUser = async (req, res, next) => {
+  let message = null;
+  const users = await User.findAll();
+  const credentials = auth(req);
+  if (credentials) {
+    const user = users.find(u => u.emailAddress === credentials.name);
+    if (user) {
+      const authenticated = bcryptjs.compareSync(
+        credentials.pass,
+        user.password
+      );
+      if (authenticated) {
+        console.log(
+          `Authentication successful for username: ${user.emailAddress}`
+        );
+        req.currentUser = user;
+      } else {
+        message = `Authentication failure for username: ${user.emailAddress}`;
+      }
+    } else {
+      message = `User not found for username: ${credentials.name}`;
+    }
+  } else {
+    message = "Authorization header not found";
+  }
+  if (message) {
+    console.warn(message);
+    res.status(401).json({ message: "Access Denied" });
+  } else {
+    next();
+  }
+};
+
 // Get Users Route
 router.get(
   "/users",
+  authenticateUser,
   asyncHandler(async (req, res) => {
     const users = await User.findAll();
     console.log("req");
@@ -43,6 +79,7 @@ router.post(
       .exists({ checkNull: true, checkFalsy: true })
       .withMessage('Please provide a value for "password"')
   ],
+  authenticateUser,
   (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -62,6 +99,7 @@ router.post(
 // Get Courses Route
 router.get(
   "/courses",
+  authenticateUser,
   asyncHandler(async (req, res) => {
     const courses = await Course.findAll({
       attributes: {
@@ -96,6 +134,7 @@ router.post(
       .exists({ checkNull: true, checkFalsy: true })
       .withMessage('Please provide a value for "userId"')
   ],
+  authenticateUser,
   (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
