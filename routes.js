@@ -1,3 +1,4 @@
+//TreeHouse TechDegree Project 9 - REST API with Authorization
 const express = require("express");
 const router = express.Router();
 const bcryptjs = require("bcryptjs");
@@ -7,6 +8,7 @@ const auth = require("basic-auth");
 const User = require("./models").models.User;
 const Course = require("./models").models.Course;
 
+//Async function handler
 function asyncHandler(cb) {
   return async (req, res, next) => {
     try {
@@ -16,16 +18,7 @@ function asyncHandler(cb) {
     }
   };
 }
-
-//Alternative method to check unique email
-// const checkEmail = (req, res) => {
-//   User.findOne({ where: { emailAddress: req.body.emailAddress } }).then(u => {
-//     if (u) {
-//       res.json({ message: "Email Address Already Exists!!" });
-//     }
-//   });
-// };
-
+// User Authentication - password hashing
 const authenticateUser = async (req, res, next) => {
   let message = null;
   const users = await User.findAll();
@@ -58,7 +51,7 @@ const authenticateUser = async (req, res, next) => {
     next();
   }
 };
-
+//*************************  Routes ************************** //
 // Get Users - Returns the authorized user
 router.get(
   "/users",
@@ -144,7 +137,7 @@ router.get(
     res.status(200).json(courses);
   })
 );
-//Get a course by ID
+//Get a specific course by ID
 router.get(
   "/courses/:id",
   asyncHandler(async (req, res) => {
@@ -226,7 +219,7 @@ router.put(
     }
   })
 );
-
+// Delete a course (protected)
 router.delete(
   "/courses/:id",
   authenticateUser,
