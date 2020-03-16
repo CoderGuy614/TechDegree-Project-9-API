@@ -59,13 +59,13 @@ module.exports = sequelize => {
 
   User.associate = models => {
     User.hasMany(models.Course, {
-      as: "userInfo",
+      as: "user",
       foreignKey: {
         fieldName: "userId",
         allowNull: false
       }
     });
   };
-  ``;
+
   return User;
 };

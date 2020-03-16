@@ -16,6 +16,13 @@ function asyncHandler(cb) {
     }
   };
 }
+const checkEmail = (req, res) => {
+  User.findOne({ where: { emailAddress: req.body.emailAddress } }).then(u => {
+    if (u) {
+      res.json({ message: "Email Address Already Exists!!" });
+    }
+  });
+};
 
 const authenticateUser = async (req, res, next) => {
   let message = null;
@@ -56,13 +63,11 @@ router.get(
   authenticateUser,
   asyncHandler(async (req, res) => {
     const authUser = req.currentUser;
-
     const user = await User.findByPk(authUser.id, {
       attributes: {
         exclude: ["password", "createdAt", "updatedAt"]
       }
     });
-
     if (user) {
       res.status(200).json(user);
     } else {
@@ -86,24 +91,36 @@ router.post(
       .withMessage("Please enter a valid email address"),
     check("password")
       .exists({ checkNull: true, checkFalsy: true })
-      .withMessage('Please provide a value for "password"')
+      .withMessage('Please provide a value for "password"'),
+    check("emailAddress").custom(value => {
+      return User.findOne({ where: { emailAddress: value } }).then(user => {
+        if (user) {
+          return Promise.reject("Email address already exists");
+        }
+      });
+    })
   ],
-  (req, res) => {
+  asyncHandler(async (req, res) => {
+    // checkEmail(req, res);
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log(errors);
       return res.status(422).json({ errors: errors.array() });
+    } else {
+      User.create({
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        emailAddress: req.body.emailAddress,
+        password: bcryptjs.hashSync(req.body.password)
+      }).then(() => {
+        res
+          .status(201)
+          .location("/")
+          .end();
+      });
     }
-    User.create({
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      emailAddress: req.body.emailAddress,
-      password: bcryptjs.hashSync(req.body.password)
-    });
-    res
-      .status(201)
-      .location("/")
-      .end();
-  }
+  })
 );
 
 // Get All Courses Route
@@ -117,7 +134,7 @@ router.get(
       include: [
         {
           model: User,
-          as: "userInfo",
+          as: "user",
           attributes: {
             exclude: ["password", "createdAt", "updatedAt"]
           }
@@ -138,7 +155,7 @@ router.get(
       include: [
         {
           model: User,
-          as: "userInfo",
+          as: "user",
           attributes: {
             exclude: ["password", "createdAt", "updatedAt"]
           }
@@ -165,6 +182,7 @@ router.post(
   ],
   authenticateUser,
   (req, res) => {
+    checkEmail();
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
