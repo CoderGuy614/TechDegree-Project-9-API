@@ -16,13 +16,15 @@ function asyncHandler(cb) {
     }
   };
 }
-const checkEmail = (req, res) => {
-  User.findOne({ where: { emailAddress: req.body.emailAddress } }).then(u => {
-    if (u) {
-      res.json({ message: "Email Address Already Exists!!" });
-    }
-  });
-};
+
+//Alternative method to check unique email
+// const checkEmail = (req, res) => {
+//   User.findOne({ where: { emailAddress: req.body.emailAddress } }).then(u => {
+//     if (u) {
+//       res.json({ message: "Email Address Already Exists!!" });
+//     }
+//   });
+// };
 
 const authenticateUser = async (req, res, next) => {
   let message = null;
@@ -101,8 +103,6 @@ router.post(
     })
   ],
   asyncHandler(async (req, res) => {
-    // checkEmail(req, res);
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       console.log(errors);
@@ -182,7 +182,6 @@ router.post(
   ],
   authenticateUser,
   (req, res) => {
-    checkEmail();
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
