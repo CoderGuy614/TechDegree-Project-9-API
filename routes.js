@@ -174,18 +174,18 @@ router.post(
       .withMessage('Please provide a value for "userId"')
   ],
   authenticateUser,
-  (req, res) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
+      return res.status(400).json({ errors: errors.array() });
     }
 
-    const course = Course.create(req.body);
+    const course = await Course.create(req.body);
     res
       .status(201)
       .location("/courses/" + course.id)
       .end();
-  }
+  })
 );
 // Update a course (Protected)
 router.put(
@@ -205,7 +205,7 @@ router.put(
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
+      return res.status(400).json({ errors: errors.array() });
     }
     const course = await Course.findByPk(req.params.id);
     const authUser = req.currentUser;
